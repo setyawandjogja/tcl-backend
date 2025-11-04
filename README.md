@@ -179,19 +179,17 @@ graph TD
 
 CREATE DATABASE coldstorage;
 
-2.Pastikan versi library Swagger sesuai
+2. Masuk ke direktori proyek
+cd transfer-service
+
+3.Pastikan versi library Swagger sesuai
 (agar tidak error undefined: swag.Spec)
 
 go get github.com/swaggo/swag@v1.8.12
 go get github.com/swaggo/http-swagger@v1.3.3
 
-3. Masuk ke direktori proyek
-cd transfer-service
-
 4.Unduh dependency
 go mod tidy
-
-
 
 
 5. Instal Swagger CLI
