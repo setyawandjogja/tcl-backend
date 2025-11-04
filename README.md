@@ -185,16 +185,23 @@ cd transfer-service
 3.Unduh dependency
 go mod tidy
 
-4. Instal Swagger CLI
+4.Pastikan versi library Swagger sesuai
+(agar tidak error undefined: swag.Spec)
+
+go get github.com/swaggo/swag@v1.8.12
+go get github.com/swaggo/http-swagger@v1.3.3
+
+
+5. Instal Swagger CLI
 go install github.com/swaggo/swag/cmd/swag@latest
 
-5. Generate Swagger Docs
+6. Generate Swagger Docs
 swag init -g cmd/transfer-service/main.go -o docs
 
-6. Jalankan aplikasi
+7. Jalankan aplikasi
 go run cmd/transfer-service/main.go
 
-7. Akses endpoin
+8. Akses endpoin
 API utama: http://localhost:8080
 
 Metrics Prometheus: http://localhost:8080/metrics
