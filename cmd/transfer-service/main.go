@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"time"
 
+	_ "transfer-service/docs" // penting untuk swagger
+
 	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -27,10 +29,10 @@ import (
 // @description API gabungan untuk manajemen transfer pallet dan pemantauan temperatur
 // @host localhost:8080
 // @BasePath /api
-
 func main() {
 	_ = godotenv.Load()
 
+	// ====== LOGGING SETUP ======
 	zerolog.TimeFieldFormat = time.RFC3339
 	logLevel := zerolog.InfoLevel
 	if os.Getenv("LOG_LEVEL") == "debug" {
@@ -47,18 +49,22 @@ func main() {
 	log.Logger = log.Output(multi).Level(logLevel)
 	defer f.Close()
 
+	// ====== DATABASE CONNECTION ======
 	dbHost := os.Getenv("DB_HOST")
 	dbPort := os.Getenv("DB_PORT")
 	dbUser := os.Getenv("DB_USER")
 	dbPass := os.Getenv("DB_PASS")
 	dbName := os.Getenv("DB_NAME")
+
 	if dbHost == "" {
 		dbHost = "localhost"
 	}
 	if dbPort == "" {
 		dbPort = "5432"
 	}
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbHost, dbPort, dbUser, dbPass, dbName)
+
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		dbHost, dbPort, dbUser, dbPass, dbName)
 
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
@@ -70,26 +76,28 @@ func main() {
 		log.Fatal().Err(err).Msg("ping db")
 	}
 
+	// ====== AUTO MIGRATION ======
 	if err := repo.AutoMigrate(db); err != nil {
 		log.Fatal().Err(err).Msg("migrate")
 	}
 
+	// ====== SERVICES ======
 	rep := repo.NewPostgresRepo(db)
 	transferSvc := service.NewTransferService(rep)
 	tempSvc := service.NewTemperatureService(rep)
 	combined := service.NewCombinedService(transferSvc, tempSvc, rep)
 
+	// ====== ROUTER ======
 	r := chi.NewRouter()
 	r.Use(handler.ZeroLogRequestMiddleware)
 
 	r.Mount("/api", handler.Routes(combined))
 	r.Handle("/metrics", promhttp.Handler())
-	r.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("http://localhost:8080/swagger/doc.json"),
-	))
+	r.Get("/swagger/*", httpSwagger.WrapHandler) // ✅ FIX Swagger handler
 
+	// ====== RUN SERVER ======
 	addr := ":8080"
-	log.Info().Msgf("starting gateway %s", addr)
+	log.Info().Msgf("starting gateway on %s", addr)
 	if err := http.ListenAndServe(addr, r); err != nil {
 		log.Fatal().Err(err).Msg("server stopped")
 	}
