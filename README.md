@@ -156,7 +156,7 @@ graph TD
     E --> F[Prometheus Metrics]
     A --> G[Swagger UI]
     B --> H[logs/app.log]
-
+```
 
 
 
