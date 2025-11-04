@@ -206,3 +206,7 @@ Metrics Prometheus: http://localhost:8080/metrics
 Swagger UI: http://localhost:8080/swagger/index.html
 
 Log file: logs/app.log
+
+Swagger
+
+![alt text](image.png)
